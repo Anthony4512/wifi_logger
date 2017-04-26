@@ -1,0 +1,113 @@
+"""
+    WifiLogger
+
+    This program changes the mac address of the machine
+    connects to a xfinitywifi network and signup for a free hour of use
+    
+    this program need to be running as SU to get permision to execute the terminal commands
+
+"""
+
+# imports
+import os
+import random
+import time  # ---> if you want to use the sleep functionality
+from selenium import webdriver
+from selenium.webdriver.support.ui import Select
+
+
+# wlan = raw_input('Enter the network device name: ex. (wlan1) \n')
+
+
+wlan = 'wlo1'  # use wlo1 for now ---> change to the your network adapter
+ifconfig = 'sudo ifconfig ' + wlan
+
+MAC_ADDRESS = '99:99:99:99:99'
+
+
+# send the given command to the terminal
+def send_command(command):
+    os.system(command)
+
+
+# update the mac address of the computer to a new one
+def update_mac(mac):
+    # new_mac = generate_mac(mac)
+    down_command = ifconfig + ' down'
+    up_command = ifconfig + ' up'
+    change_command = ifconfig + ' hw ether ' + mac  # new_mac if want to change mac while in this function
+
+    # time.sleep(1)  # sleep in case that is sending the commands too fast
+    send_command(down_command)
+    # time.sleep(1)
+    send_command(change_command)
+    # time.sleep(1)
+    send_command(up_command)
+
+
+# generates a new mac address, returns only the last 5 pair of numbers -> hard coded the 1st pair of numbers
+def generate_mac(mac):
+    numbers = mac.split(':')
+    new_numbers = []
+    h_letters = ['a', 'b', 'c', 'd', 'e', 'f']
+    for number in range(len(numbers)):
+        rand_number = random.randrange(6)
+        chooser = random.randrange(4)
+        if chooser == 0:
+            new_numbers.append(str(random.randrange(10)) + h_letters[rand_number])
+        elif chooser == 1:
+            new_numbers.append(str(random.randrange(10)) + str(random.randrange(10)))
+        elif chooser == 2:
+            new_numbers.append(h_letters[rand_number] + h_letters[rand_number])
+        else:
+            new_numbers.append(h_letters[rand_number] + str(random.randrange(10)))
+    # numbers = []
+    numbers = ':'.join(new_numbers)
+    return numbers
+
+
+# open a web browser and does the signup automaticaly
+def wifi_login():
+    # Optional argument, if not specified will search path.
+    driver = webdriver.Chrome('PATH_TO_CHROMEDRIVER/chromedriver')  #write the path to the chrome driver before the '/'
+    driver.get('http://xfinity.com')
+    # time.sleep(2)  # Let the user actually see something!
+    singup_button = driver.find_element_by_id('viasat_signup')
+    singup_button.click()
+    time.sleep(3)
+    select_plan = Select(driver.find_element_by_id('rateplanid'))
+    select_plan.select_by_visible_text('$0.00 for a Complimentary Hour Pass')
+    fill_zip = driver.find_element_by_id('spn_postal')
+    fill_zip.send_keys('01843')
+    fill_email = driver.find_element_by_id('spn_email')
+    fill_email.send_keys('ramon_mejia_gomes@hotmail.com')
+    driver.find_element_by_id('spn_terms').click()
+    time.sleep(2)
+    driver.find_element_by_name('').click()
+    time.sleep(10)  # Let the user actually see something!
+    driver.quit()
+
+
+# send the command to connect to the xfinitywifi
+def wifi_connect():
+    send_command('nmcli con up xfinitywifi')
+
+
+# main function
+def main():
+
+    mac_address = generate_mac(MAC_ADDRESS)
+    # using c4 for tpLink vendor.. you can use any vendor you want, and it has to be even number
+    mac_address = 'c4:' + mac_address
+    update_mac(mac_address)
+    print('New mac address: ' + mac_address)
+    print("Now signing you to xfinity...")
+    wifi_connect()
+    time.sleep(4)
+    wifi_login()
+    print('I think you might be all set!!')
+
+# run main
+if __name__ == '__main__':
+    main()
+
