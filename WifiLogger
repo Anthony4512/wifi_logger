@@ -93,6 +93,7 @@ def wifi_connect():
     send_command('nmcli con up xfinitywifi')
 
 
+
 # main function
 def main():
 
@@ -107,7 +108,7 @@ def main():
     wifi_login()
     print('I think you might be all set!!')
 
+
 # run main
 if __name__ == '__main__':
     main()
-
